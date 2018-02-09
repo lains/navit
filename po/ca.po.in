@@ -213,10 +213,19 @@ msgstr "Entreu a la rotonda %s"
 msgid "then enter the roundabout"
 msgstr ""
 
-#. TRANSLATORS: first arg. is the manieth exit, second arg. is the destination to follow
+#. TRANSLATORS: first arg. is the manieth exit, second arg. is the gross direction in the roundabout, third arg. is the destination to follow
 #, c-format
-msgid "Leave the roundabout at the %1$s %2$s"
-msgstr "Deixeu la rotonda a la %1$s %2$s"
+msgid "Leave the roundabout at the %1$s %2$s %3$s"
+msgstr "Deixeu la rotonda a la %1$s %2$s %3$s"
+
+msgid "towards your right"
+msgstr ""
+
+msgid "towards your left"
+msgstr ""
+
+msgid "ahead"
+msgstr ""
 
 msgid "soon"
 msgstr "aviat"

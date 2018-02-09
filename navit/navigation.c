@@ -3136,6 +3136,7 @@ show_maneuver(struct navigation *nav, struct navigation_itm *itm, struct navigat
 	char *street_destination_announce=NULL;
 	int skip_roads = 0;
 	int count_roundabout;
+	char *gross_dir;
 	struct navigation_itm *cur;
 	struct navigation_way *candidate_way;
 	int tellstreetname = 0;
@@ -3229,6 +3230,29 @@ show_maneuver(struct navigation *nav, struct navigation_itm *itm, struct navigat
 					break;
 				}
 				candidate_way=candidate_way->next;
+			}
+		}
+		if (cmd->maneuver && cmd->maneuver->type)
+		{
+			gross_dir = ""; /* Add a precision about the gross direction of the exit (ahead, right, left...) to the textual directions whenever possible */
+			switch (cmd->maneuver->type)	/* type is set during analysis in navigation_analyze_roundabout() */
+			{
+				case type_nav_roundabout_r2:
+				case type_nav_roundabout_l6:
+					gross_dir = _("towards your right");
+					break;
+				case type_nav_roundabout_r4:
+				case type_nav_roundabout_l4:
+					gross_dir = _("ahead");
+					break;
+				case type_nav_roundabout_r6:
+				case type_nav_roundabout_l2:
+					gross_dir = _("towards your left");
+					break;
+				case type_nav_roundabout_r8:
+				case type_nav_roundabout_l8:
+					gross_dir = "en arrière"; //FIXME
+					break;
 			}
 		}
 
