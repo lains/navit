@@ -3126,6 +3126,7 @@ navigation_cmd_get_exit_announce(struct navigation_command *this_, char *street_
  * names more than once
  * @param connect Whether this is the second of two connected announcements, as in "turn left
  * in..., then turn right"
+ * @return The guidance sentence generated for command {@code cmd}
  */
 static char *
 show_maneuver(struct navigation *nav, struct navigation_itm *itm, struct navigation_command *cmd, enum attr_type type, enum announcement_level level)
