@@ -3272,8 +3272,8 @@ show_maneuver(struct navigation *nav, struct navigation_itm *itm, struct navigat
 			case level_connect:
 				return g_strdup(_("then enter the roundabout"));
 			case level_now:
-				/* TRANSLATORS: first arg. is the manieth exit, second arg. is the destination to follow */
-				return g_strdup_printf(_("Leave the roundabout at the %1$s %2$s"), get_exit_count_str(count_roundabout),street_destination_announce);
+				/* TRANSLATORS: first arg. is the manieth exit, second arg. is the gross direction in the roundabout, third arg. is the destination to follow */
+				return g_strdup_printf(_("Leave the roundabout at the %1$s %2$s %3$s"), get_exit_count_str(count_roundabout),gross_dir,street_destination_announce);
 			default :
 				dbg(lvl_error,"unexpected announcement level %d\n", level);
 				return g_strdup_printf("internal error");
