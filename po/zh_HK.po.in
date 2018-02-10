@@ -209,6 +209,11 @@ msgstr ""
 msgid "Leave the roundabout at the %1$s %2$s"
 msgstr "在 %1$s %2$s 離開迴旋處"
 
+#. TRANSLATORS: first arg. is the manieth exit, second arg. is the destination to follow
+#, c-format
+msgid "Cross the roundabout at the %1$s %2$s"
+msgstr ""
+
 msgid "soon"
 msgstr "即將"
 

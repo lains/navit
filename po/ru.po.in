@@ -233,6 +233,11 @@ msgstr "затем круговое движение"
 msgid "Leave the roundabout at the %1$s %2$s"
 msgstr "Круговое движение,  %1$s %2$s"
 
+#. TRANSLATORS: first arg. is the manieth exit, second arg. is the destination to follow
+#, c-format
+msgid "Cross the roundabout at the %1$s %2$s"
+msgstr ""
+
 msgid "soon"
 msgstr "скоро"
 

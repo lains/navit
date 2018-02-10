@@ -241,6 +241,11 @@ msgstr "dann in den Kreisverkehr einfahren"
 msgid "Leave the roundabout at the %1$s %2$s"
 msgstr "Verlassen Sie den Kreisverkehr an der %1$s %2$s"
 
+#. TRANSLATORS: first arg. is the manieth exit, second arg. is the destination to follow
+#, c-format
+msgid "Cross the roundabout at the %1$s %2$s"
+msgstr ""
+
 msgid "soon"
 msgstr "Demnächst"
 
