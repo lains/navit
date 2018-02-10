@@ -3251,6 +3251,16 @@ show_maneuver(struct navigation *nav, struct navigation_itm *itm, struct navigat
 			case level_connect:
 				return g_strdup(_("then enter the roundabout"));
 			case level_now:
+				if (cmd->maneuver && cmd->maneuver->type)
+				{
+					switch (cmd->maneuver->type)	/* type is set during analysis in navigation_analyze_roundabout() */
+					{
+						case type_nav_roundabout_r4:
+						case type_nav_roundabout_l4:
+							/* TRANSLATORS: first arg. is the manieth exit, second arg. is the destination to follow */
+							return g_strdup_printf(_("Cross the roundabout at the %1$s %2$s"), get_exit_count_str(count_roundabout),street_destination_announce);
+					}
+				}
 				/* TRANSLATORS: first arg. is the manieth exit, second arg. is the destination to follow */
 				return g_strdup_printf(_("Leave the roundabout at the %1$s %2$s"), get_exit_count_str(count_roundabout),street_destination_announce);
 			default :
