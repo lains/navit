@@ -240,6 +240,11 @@ msgstr "vers la gauche"
 msgid "ahead"
 msgstr "en face"
 
+#. TRANSLATORS: first arg. is the manieth exit, second arg. is the destination to follow
+#, c-format
+msgid "Cross the roundabout at the %1$s %2$s"
+msgstr "Traversez le rond-point en prenant la %1$s %2$s"
+
 msgid "soon"
 msgstr "bientôt"
 

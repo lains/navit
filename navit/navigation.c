@@ -194,8 +194,25 @@ struct navigation {
 /** @brief Set of simplified distance values that are easy to be pronounced.
 *          Used for the 'vocabulary_distances' configuration.
 */
-int distances[]={1,2,3,4,5,10,25,50,75,100,150,200,250,300,400,500,750,-1};
 
+/**
+ * This method of calculating the number of elements in an array
+ * (#define SIZE_OF_ARRAY_DISTANCES, below) will work for most modern
+ * processors. It may cause problems on a few obscure processors, none
+ * of which are likely candidates for navit anyway.
+ *
+ * It works like so: Modern processors simply stuff the elements of an
+ * int array into memory one after the other, with no gaps. Some older
+ * processors might not do so, due to memory alignment issues. This
+ * method does not take such gaps into account. For more discussion,
+ * see https://github.com/navit-gps/navit/pull/373
+ *
+ * So if you are on an oddball processor and start getting really odd
+ * values for distances, this might be the reason. Good luck!
+ */
+const int distances[]={1,2,3,4,5,10,25,50,75,100,150,200,250,300,400,500,750};
+#define SIZE_OF_ARRAY_DISTANCES (sizeof (distances)/sizeof (int))
+#define LAST_DISTANCE (SIZE_OF_ARRAY_DISTANCES - 1)
 
 /* Allowed values for navigation_maneuver.merge_or_exit
  * The numeric values are chosen in such a way that they can be interpreted as flags:
@@ -965,20 +982,6 @@ round_distance(int dist)
 	return dist*10000;
 }
 
-/** @brief Returns the last element of the simplified numbers containing a distance value.
-*   @return value with the highest distance.
-*/
-static int
-distance_set_last(void)
-{
-	static int i=0;
-	if (i == 0) {
-		while (distances[i] > 0)
-			i++;
-	}
-	return distances[i-1];
-}
-
 /** @brief Restricts the distance value to a simple set of pronounceable numbers.
 *   @param  dist       The distance to be processed
 *   @return distance   Simplified distance value
@@ -987,14 +990,14 @@ static int
 round_distance_reduced( int dist )
 {
 	int factor = 1;
-	if (dist > distance_set_last())
+	if (dist > distances[LAST_DISTANCE])
 	{
 		dist=(dist+500)/1000;
 		factor = 1000;
 	}
 
 	int i=0,d=0,m=0;
-	while (distances[i] > 0) {
+	while (i < SIZE_OF_ARRAY_DISTANCES) {
 		if (!i || abs(distances[i]-dist) <= d) {
 			d=abs(distances[i]-dist);
 			m=i;
@@ -3137,7 +3140,6 @@ show_maneuver(struct navigation *nav, struct navigation_itm *itm, struct navigat
 	char *street_destination_announce=NULL;
 	int skip_roads = 0;
 	int count_roundabout;
-	char *gross_dir;
 	struct navigation_itm *cur;
 	struct navigation_way *candidate_way;
 	int tellstreetname = 0;
@@ -3233,29 +3235,6 @@ show_maneuver(struct navigation *nav, struct navigation_itm *itm, struct navigat
 				candidate_way=candidate_way->next;
 			}
 		}
-		if (cmd->maneuver && cmd->maneuver->type)
-		{
-			gross_dir = ""; /* Add a precision about the gross direction of the exit (ahead, right, left...) to the textual directions whenever possible */
-			switch (cmd->maneuver->type)	/* type is set during analysis in navigation_analyze_roundabout() */
-			{
-				case type_nav_roundabout_r2:
-				case type_nav_roundabout_l6:
-					gross_dir = _("towards your right");
-					break;
-				case type_nav_roundabout_r4:
-				case type_nav_roundabout_l4:
-					gross_dir = _("ahead");
-					break;
-				case type_nav_roundabout_r6:
-				case type_nav_roundabout_l2:
-					gross_dir = _("towards your left");
-					break;
-				case type_nav_roundabout_r8:
-				case type_nav_roundabout_l8:
-					gross_dir = "en arrière"; //FIXME
-					break;
-			}
-		}
 
 		switch (level)
 		{
@@ -3273,8 +3252,18 @@ show_maneuver(struct navigation *nav, struct navigation_itm *itm, struct navigat
 			case level_connect:
 				return g_strdup(_("then enter the roundabout"));
 			case level_now:
-				/* TRANSLATORS: first arg. is the manieth exit, second arg. is the gross direction in the roundabout, third arg. is the destination to follow */
-				return g_strdup_printf(_("Leave the roundabout at the %1$s %2$s %3$s"), get_exit_count_str(count_roundabout),gross_dir,street_destination_announce);
+				if (cmd->maneuver && cmd->maneuver->type)
+				{
+					switch (cmd->maneuver->type)	/* type is set during analysis in navigation_analyze_roundabout() */
+					{
+						case type_nav_roundabout_r4:
+						case type_nav_roundabout_l4:
+							/* TRANSLATORS: first arg. is the manieth exit, second arg. is the destination to follow */
+							return g_strdup_printf(_("Cross the roundabout at the %1$s %2$s"), get_exit_count_str(count_roundabout),street_destination_announce);
+					}
+				}
+				/* TRANSLATORS: first arg. is the manieth exit, second arg. is the destination to follow */
+				return g_strdup_printf(_("Leave the roundabout at the %1$s %2$s"), get_exit_count_str(count_roundabout),street_destination_announce);
 			default :
 				dbg(lvl_error,"unexpected announcement level %d\n", level);
 				return g_strdup_printf("internal error");
