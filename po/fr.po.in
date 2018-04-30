@@ -243,22 +243,22 @@ msgstr "puis"
 #. TRANSLATORS: the arg. is the phrase 'onto ...'. Right merge, the stuff after | doesn't have to be included.
 #, c-format
 msgid "then merge%1$s|right"
-msgstr "Puis prendre à droite %1$s"
+msgstr "Puis insérez-vous vers la droite %1$s"
 
 #. TRANSLATORS: the first arg. is distance, the second is the phrase 'onto ...'. Right merge, the stuff after | doesn't have to be included.
 #, c-format
 msgid "Merge %1$s%2$s|right"
-msgstr "%1$s prendre à droite %2$s"
+msgstr "%1$s insérez-vous vers la droite %2$s"
 
 #. TRANSLATORS: the arg. is the phrase 'onto ...'. Left merge, the stuff after | doesn't have to be included.
 #, c-format
 msgid "then merge%1$s|left"
-msgstr "Puis prendre à gauche %1$s"
+msgstr "Puis insérez-vous vers la gauche %1$s"
 
 #. TRANSLATORS: the first arg. is distance, the second is the phrase 'onto ...'. Left merge, the stuff after | doesn't have to be included.
 #, c-format
 msgid "Merge %1$s%2$s|left"
-msgstr "%1$s prendre à gauche %2$s"
+msgstr "%1$s insérez-vous vers la gauche %2$s"
 
 msgid "on your left"
 msgstr "sur votre gauche"
