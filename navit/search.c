@@ -96,9 +96,9 @@ static gboolean search_item_hash_equal(gconstpointer a, gconstpointer b) {
  *
  * @return A pointer to a search result structure containing the list of results (or NULL if no result was found).
  *
- * @warning The structure returned by this function will have to be deallocated by the caller via a call to map_search_item_results_free()
+ * @warning The structure returned by this function will have to be deallocated by the caller via a call to search_geo_list_destroy()
  */
-struct item_search_results *map_search_item_results_new(struct mapset *ms, struct pcoord *pc, const int search_distance,
+struct item_search_results *search_geo_list_new(struct mapset *ms, struct pcoord *pc, const int search_distance,
         const struct item_range *item_range) {
 
     GList *list = NULL;
@@ -174,11 +174,11 @@ struct item_search_results *map_search_item_results_new(struct mapset *ms, struc
 }
 
 /**
- * @brief Deallocate a search result structure previously created by map_search_item_results_new()
+ * @brief Deallocate a search result structure previously created by search_geo_list_new()
  *
  * @param search_results A pointer to the structure to deallocate. After a call to this function, @p search_results will point to unallocated memory and should not be used anymore
  */
-void map_search_item_results_free(struct item_search_results *search_results) {
+void search_geo_list_destroy(struct item_search_results *search_results) {
     GList *p;
     struct item_search_entry *result_item;
 
@@ -397,15 +397,14 @@ static GList *search_by_address_attr(GList *results, struct search_list *sl, GLi
 
 static void search_by_address(struct search_list *this_, char *addr) {
     char *str=search_fix_spaces(addr);
-    GList *tmp,*phrases=search_split_phrases(str);
+    GList *p;
+    GList *phrases=search_split_phrases(str);
     struct search_list *sl=search_list_new(this_->ms);
     this_->address_results=search_by_address_attr(NULL, sl, phrases, NULL, attr_country_all, 0);
     this_->address_results_pos=this_->address_results;
     search_list_destroy(sl);
-    tmp=phrases;
-    while (tmp) {
-        g_free(tmp->data);
-        tmp=g_list_next(tmp);
+    for (p=phrases;p;p=g_list_next(p)) {
+        g_free(p->data);
     }
     g_list_free(phrases);
     // TODO: Looks like we should g_free(str) here. But this is

@@ -595,7 +595,7 @@ int map_selection_contains_item_rect(struct map_selection *sel, struct item *ite
  * @return True if there is a match, false otherwise
  */
 
-int map_selection_contains_item_range(struct map_selection *sel, int follow, struct item_range *range, int count) {
+int map_selection_contains_item_range(struct map_selection *sel, int follow, const struct item_range *range, int count) {
     int i;
     if (! sel)
         return 1;

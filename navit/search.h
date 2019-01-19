@@ -97,9 +97,9 @@ struct mapset;
 struct search_list;
 struct search_list_result;
 struct jni_object;
-struct item_search_results *map_search_item_results_new(struct mapset *ms, struct pcoord *pc, const int search_distance,
+struct item_search_results *search_geo_list_new(struct mapset *ms, struct pcoord *pc, const int search_distance,
         const struct item_range *item_range);
-void map_search_item_results_free(struct item_search_results *search_results);
+void search_geo_list_destroy(struct item_search_results *search_results);
 struct search_list *search_list_new(struct mapset *ms);
 int search_list_level(enum attr_type attr_type);
 void search_list_search(struct search_list *this_, struct attr *search_attr, int partial);

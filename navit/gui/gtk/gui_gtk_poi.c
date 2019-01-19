@@ -119,17 +119,17 @@ static char *get_town_name_around(struct navit *navit, struct pcoord *pc) {
 
     for (search_distance_kilometers=1; search_distance_kilometers < 512; search_distance_kilometers<<=1) {
         dbg(lvl_error, "Searching for town within %dkm", search_distance_kilometers);
-        struct item_search_results *results = map_search_item_results_new(navit_get_mapset(navit), pc,
+        struct item_search_results *results = search_geo_list_new(navit_get_mapset(navit), pc,
                                               search_distance_kilometers * 1000, &sel_range);
         if (results && results->closest) {
             if (results->closest->label) {
                 dbg(lvl_error, "Found a town within searched area");
                 closest_label = g_strdup(results->closest->label);
-                map_search_item_results_free(results);
+                search_geo_list_destroy(results);
                 break;
             }
         }
-        map_search_item_results_free(results);
+        search_geo_list_destroy(results);
         dbg(lvl_error, "Did not find a town within searched area");
     }
     return closest_label;
