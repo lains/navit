@@ -63,12 +63,32 @@ struct search_list_house_number {
 };
 
 struct search_list_result {
-	int id;
-	struct pcoord *c;
-	struct search_list_country *country;
-	struct search_list_town *town;
-	struct search_list_street *street;
-	struct search_list_house_number *house_number;
+    int id;
+    struct pcoord *c;
+    struct search_list_country *country;
+    struct search_list_town *town;
+    struct search_list_street *street;
+    struct search_list_house_number *house_number;
+};
+
+/**
+ * @brief A search result structure containing items resulting from a search around a reference point. It also contains a pointer to the closest result.
+ *
+ * This struct is the output format of function map_search_item_results_alloc()
+ */
+struct item_search_results {
+    GList *list;	/*!< A list containing search results. Search results (of type struct item_search_entry) are the data part of this list */
+    struct item_search_entry *closest;	/*!< A pointer to the closest result from the search reference */
+};
+
+/**
+ * @brief A search result item created during a search around a reference point.
+ */
+struct item_search_entry {
+    struct item item;	/*!< A (deep) copy of the result item */
+    int dist;	/*!< The distance to the search reference */
+    struct pcoord *coord;	/*!< The coordinates of the item (altogether with the associated projection) */
+    char *label;	/*!< Label for this item (if any, or NULL otherwise) */
 };
 
 /* prototypes */
@@ -77,6 +97,9 @@ struct mapset;
 struct search_list;
 struct search_list_result;
 struct jni_object;
+struct item_search_results *map_search_item_results_new(struct mapset *ms, struct pcoord *pc, const int search_distance,
+        const struct item_range *item_range);
+void map_search_item_results_free(struct item_search_results *search_results);
 struct search_list *search_list_new(struct mapset *ms);
 int search_list_level(enum attr_type attr_type);
 void search_list_search(struct search_list *this_, struct attr *search_attr, int partial);

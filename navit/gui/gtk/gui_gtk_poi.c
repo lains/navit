@@ -28,6 +28,7 @@
 #include "callback.h"
 #include "graphics.h"
 #include "navit.h"
+#include "search.h"
 #include "item.h"
 #include "map.h"
 #include "mapset.h"
@@ -100,138 +101,6 @@ static GtkTreeModel *category_list_model(struct gtk_poi_search *search) {
 }
 
 /**
- * @brief A search result structure containing items resulting from a search around a reference point. It also contains a pointer to the closest result.
- *
- * This struct is the output format of function map_search_item_results_alloc()
- */
-struct item_search_results {
-    GList *list;	/*!< A list containing search results. Search results (of type struct item_search_entry) are the data part of this list */
-    struct item_search_entry *closest;	/*!< A pointer to the closest result from the search reference */
-};
-
-/**
- * @brief A search result item created during a search around a reference point.
- */
-struct item_search_entry {
-    struct item item;	/*!< A (deep) copy of the result item */
-    int dist;	/*!< The distance to the search reference */
-    struct pcoord coord;	/*!< The coordinates of the item (altogether with the associated projection) */
-    char *label;	/*!< Label for this item (if any, or NULL otherwise) */
-};
-
-/**
- * @brief Search items of a map, around a specific point
- *
- * @param navit The navit instance
- * @param pc The coordinates of the reference point around which to perform the search
- * @param search_distance The maximum distance (in meters) to include results
- *
- * @return A pointer to a search result structure containing the list of results. This structure will have to be deallocated by the caller via a call to map_search_item_results_free()
- */
-struct item_search_results *map_search_item_results_alloc(struct navit *navit, struct pcoord *pc, int search_distance) {
-
-    GList *list = NULL;
-    struct map_selection *sel,*selm;
-    struct coord coord_item;
-    struct mapset_handle *h;
-    struct map *m;
-    struct map_rect *mr;
-    struct item *item;
-    struct coord c;
-    int idist; /* idist is the distance in meters from the search reference (center of the screen) to a POI. */
-    struct item_search_entry *result_item;
-    struct item_search_entry *closest_result = NULL;
-    int shortest_dist = INT_MAX;
-    struct item_search_results *result; /* The structure we will return */
-
-    c.x = pc->x;
-    c.y = pc->y;
-
-    sel=map_selection_rect_new(pc,search_distance*transform_scale(abs(pc->y)+search_distance*100*1.5),18);
-
-    h=mapset_open(navit_get_mapset(navit));
-
-    enum item_type selected_lo_range, selected_hi_range; //FIXME: this should be passed as parameter
-
-    /* TODO: use struct item_range here */
-    selected_lo_range=item_from_name("town_label_1e3");
-    selected_hi_range=item_from_name("town_label") |
-                      0xff;	/* Consider all items up to 255 (in practice, there are labels much less town_label_* items, but we provision for future expansion */
-    while ((m=mapset_next(h, 1))) {
-        selm=map_selection_dup_pro(sel, projection_mg, map_projection(m));
-        mr=map_rect_new(m, selm);
-        if (mr) {
-            while ((item=map_rect_get_item(mr))) {
-                struct attr label_attr;
-                item_attr_get(item,attr_label,&label_attr);
-                if (item->type>=selected_lo_range && item->type<=selected_hi_range) {
-                    if (item_coord_get(item,&coord_item,1) == 1) {
-                        idist=transform_distance(projection_mg,&c,&coord_item);
-                        //dbg(lvl_error, "At distance %d, found POI type @@%s@@", idist, item_to_name(item->type));
-                        if (idist<=search_distance) {
-                            result_item = g_new0(struct item_search_entry, 1);
-                            result_item->item = *item;	/* Copy the item */
-                            result_item->coord.pro = map_projection(m);
-                            result_item->coord.x = coord_item.x;
-                            result_item->coord.y = coord_item.y;
-                            result_item->dist=idist;
-                            if (idist < shortest_dist) { /* Keep track of closest result (from the search reference) */
-                                shortest_dist = idist;
-                                closest_result = result_item;
-                            }
-                            if (label_attr.type==attr_label) {
-                                result_item->label = g_strdup(label_attr.u.str);
-                                //dbg(lvl_error, "with label \"%s\"", closest_label?closest_label:"NULL");*/
-                            }
-                            list = g_list_prepend(list, result_item);
-                        }
-                    }
-                }
-            }
-            map_rect_destroy(mr);
-        }
-        map_selection_destroy(selm);
-    }
-    map_selection_destroy(sel);
-    mapset_close(h);
-
-    result = g_new0(struct item_search_results, 1);
-
-    result->closest = closest_result;
-    result->list = list;
-    return result;
-}
-
-/**
- * @brief Deallocate a search result structure previously created by map_search_item_results_alloc
- *
- * @param search_results A pointer to the structure to deallocate. After a call to this function, @p search_results will point to unallocated memory and should not be used anymore
- */
-void map_search_item_results_free(struct item_search_results *search_results) {
-    GList *p;
-    struct item_search_entry *result_item;
-
-
-    /* We will deallocate all result_items, possibly their labels (strings) and finally the GList contained inside earch_results and finally the structure search_results itself */
-    if (search_results) {
-        if (search_results->list) {
-            /* Parse the GList starting at list and free all payloads before freeing the list itself */
-            for(p=search_results->list; p; p=g_list_next(p)) {
-                result_item = p->data;
-                if (result_item) {
-                    if (result_item->label) {
-                        free(result_item->label);
-                    }
-                    free(result_item);
-                }
-            }
-            g_list_free(search_results->list);
-        }
-        free(search_results);
-    }
-}
-
-/**
  * @brief Get the name of the closest town compared to a specific point
  *
  * @param navit The navit instance
@@ -239,14 +108,19 @@ void map_search_item_results_free(struct item_search_results *search_results) {
  *
  * @return A string containing the town name, or NULL if none was found. If non-NULL, it is up to the caller to free this string using g_free()
  */
-char *get_town_name_around(struct navit *navit, struct pcoord *pc) {
+static char *get_town_name_around(struct navit *navit, struct pcoord *pc) {
     int search_distance_kilometers;
-    enum item_type selected_lo_range, selected_hi_range;
     char *closest_label = NULL;
+    struct item_range sel_range;
+
+    sel_range.min=item_from_name("town_label_1e3");
+    sel_range.max=item_from_name("town_label") |
+                  0xff;	/* Consider all items up to 255 (in practice, there are labels much less town_label_* items, but we provision for future expansion */
 
     for (search_distance_kilometers=1; search_distance_kilometers < 512; search_distance_kilometers<<=1) {
         dbg(lvl_error, "Searching for town within %dkm", search_distance_kilometers);
-        struct item_search_results *results = map_search_item_results_alloc(navit, pc, search_distance_kilometers * 1000);
+        struct item_search_results *results = map_search_item_results_new(navit_get_mapset(navit), pc,
+                                              search_distance_kilometers * 1000, &sel_range);
         if (results && results->closest) {
             if (results->closest->label) {
                 dbg(lvl_error, "Found a town within searched area");

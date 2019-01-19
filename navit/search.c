@@ -87,6 +87,125 @@ static gboolean search_item_hash_equal(gconstpointer a, gconstpointer b) {
 }
 
 /**
+ * @brief Search items of a map, around a specific point
+ *
+ * @param ms mapset that is to be searched
+ * @param pc The coordinates of the reference point around which to perform the search
+ * @param search_distance The maximum distance (in meters) to include results
+ * @param item_range An restriction of max and min item types to include in the results (max and min are included in the range). If NULL, all results will be included.
+ *
+ * @return A pointer to a search result structure containing the list of results (or NULL if no result was found).
+ *
+ * @warning The structure returned by this function will have to be deallocated by the caller via a call to map_search_item_results_free()
+ */
+struct item_search_results *map_search_item_results_new(struct mapset *ms, struct pcoord *pc, const int search_distance,
+        const struct item_range *item_range) {
+
+    GList *list = NULL;
+    struct map_selection *sel,*selm;
+    struct coord coord_item;
+    struct mapset_handle *h;
+    struct map *m;
+    struct map_rect *mr;
+    struct item *item;
+    struct coord c;
+    int idist; /* idist is the distance in meters from the search reference (center of the screen) to a POI. */
+    struct item_search_entry *result_item;
+    struct item_search_entry *closest_result = NULL;
+    int shortest_dist = INT_MAX;
+    struct item_search_results *result; /* The structure we will return */
+
+    c.x = pc->x;
+    c.y = pc->y;
+
+    sel=map_selection_rect_new(pc,search_distance*transform_scale(abs(pc->y)+search_distance*100*1.5),18);
+
+    if (!map_selection_contains_item_range(sel, 0, item_range, 1)) {
+        dbg(lvl_warning, "Selected map does not contain items types between %d and %d", item_range->min, item_range->max);
+        return NULL;
+    }
+
+    h=mapset_open(ms);
+
+    while ((m=mapset_next(h, 1))) {
+        selm=map_selection_dup_pro(sel, projection_mg, map_projection(m));
+        mr=map_rect_new(m, selm);
+        if (mr) {
+            while ((item=map_rect_get_item(mr))) {
+                struct attr label_attr;
+                item_attr_get(item,attr_label,&label_attr);
+                if (!item_range || (item->type>=item_range->min && item->type<=item_range->max)) {
+                    if (item_coord_get(item,&coord_item,1) == 1) {
+                        idist=transform_distance(projection_mg,&c,&coord_item);
+                        //dbg(lvl_error, "At distance %d, found POI type @@%s@@", idist, item_to_name(item->type));
+                        if (idist<=search_distance) {
+                            result_item = g_new0(struct item_search_entry, 1);
+                            result_item->item = *item;	/* Copy the item */
+                            result_item->coord = g_new0(struct pcoord, 1);
+                            result_item->coord->pro = map_projection(m);
+                            result_item->coord->x = coord_item.x;
+                            result_item->coord->y = coord_item.y;
+                            result_item->dist=idist;
+                            if (idist < shortest_dist) { /* Keep track of closest result (from the search reference) */
+                                shortest_dist = idist;
+                                closest_result = result_item;
+                            }
+                            if (label_attr.type==attr_label) {
+                                result_item->label = g_strdup(label_attr.u.str);
+                                //dbg(lvl_error, "with label \"%s\"", closest_label?closest_label:"NULL");*/
+                            }
+                            list = g_list_prepend(list, result_item);
+                        }
+                    }
+                }
+            }
+            map_rect_destroy(mr);
+        }
+        map_selection_destroy(selm);
+    }
+    map_selection_destroy(sel);
+    mapset_close(h);
+
+    result = g_new0(struct item_search_results, 1);
+
+    result->closest = closest_result;
+    result->list = list;
+    return result;
+}
+
+/**
+ * @brief Deallocate a search result structure previously created by map_search_item_results_new()
+ *
+ * @param search_results A pointer to the structure to deallocate. After a call to this function, @p search_results will point to unallocated memory and should not be used anymore
+ */
+void map_search_item_results_free(struct item_search_results *search_results) {
+    GList *p;
+    struct item_search_entry *result_item;
+
+
+    /* We will deallocate all result_items, possibly their labels (strings) and finally the GList contained inside earch_results and finally the structure search_results itself */
+    if (search_results) {
+        if (search_results->list) {
+            /* Parse the GList starting at list and free all payloads before freeing the list itself */
+            for(p=search_results->list; p; p=g_list_next(p)) {
+                result_item = p->data;
+                if (result_item) {
+                    if (result_item->label) {
+                        g_free(result_item->label);
+                    }
+                    if (result_item->coord) {
+                        g_free(result_item->coord);
+                    }
+                    g_free(result_item);
+                }
+            }
+            g_list_free(search_results->list);
+        }
+        free(search_results);
+    }
+}
+
+/**
  * @brief Create new instance of search_list to run a search.
  *
  * @param ms mapset that is to be searched
