@@ -652,7 +652,7 @@ static int transform_reverse_near_far(struct transformation *t, struct point *p,
 }
 
 /**
- * @brief Get the grographic coordinates of a specific point on the current map displayed
+ * @brief Get the geographic coordinates of a specific point on the current map displayed
  *
  * @note This also takes into account the pitch of the map (3D view) if any
  *

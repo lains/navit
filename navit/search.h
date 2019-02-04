@@ -97,6 +97,7 @@ struct mapset;
 struct search_list;
 struct search_list_result;
 struct jni_object;
+int pcoord_to_country(struct mapset *ms, struct pcoord *pc);
 struct item_search_results *search_geo_list_new(struct mapset *ms, struct pcoord *pc, const int search_distance,
         const struct item_range *item_range);
 void search_geo_list_destroy(struct item_search_results *search_results);

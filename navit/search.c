@@ -87,6 +87,56 @@ static gboolean search_item_hash_equal(gconstpointer a, gconstpointer b) {
 }
 
 /**
+ * @brief Get the country to which a given geographical point belongs
+ *
+ * @param ms mapset that is to be searched
+ * @param pc The coordinates of the reference point around which to perform the search
+ *
+ * @return A country ID as used in struct country (see country.c) or 0 if no country was found
+ */
+int pcoord_to_country(struct mapset *ms, struct pcoord *pc) {
+    struct map_selection *sel,*selm;
+    struct mapset_handle *h;
+    struct map *m;
+    struct map_rect *mr;
+    struct item *item;
+    int countryid = 0;	/* 0 is unknown */
+
+    sel=map_selection_rect_new(pc,1,18);
+
+    if (!map_selection_contains_item(sel, 0, type_countryindex)) {
+        dbg(lvl_warning, "Selected map does not contain country index");
+        map_selection_destroy(sel);
+        return 0;
+    }
+
+    h=mapset_open(ms);
+
+    while (!countryid && (m=mapset_next(h, 1))) {
+        selm=map_selection_dup_pro(sel, projection_mg, map_projection(m));
+        mr=map_rect_new(m, selm);
+        if (mr) {
+            while ((item=map_rect_get_item(mr))) {
+                dbg(lvl_error, "Found item type @@%s@@", item_to_name(item->type));
+				if (item->type == type_countryindex) {
+					struct attr attr;
+					if (item_attr_get(item, attr_country_id, &attr)) {
+						countryid=attr.u.num; /* Warning id is a long... int!!! */
+						dbg(lvl_error, "Found country ID %d", countryid);
+						break;
+					}
+                }
+            }
+            map_rect_destroy(mr);
+        }
+        map_selection_destroy(selm);
+    }
+    map_selection_destroy(sel);
+    mapset_close(h);
+    return countryid;
+}
+
+/**
  * @brief Search items of a map, around a specific point
  *
  * @param ms mapset that is to be searched

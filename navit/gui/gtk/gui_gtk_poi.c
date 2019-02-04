@@ -114,8 +114,8 @@ static char *get_town_name_around(struct navit *navit, struct pcoord *pc) {
     struct item_range sel_range;
 
     sel_range.min=item_from_name("town_label_1e3");
-    sel_range.max=item_from_name("town_label") |
-                  0xff;	/* Consider all items up to 255 (in practice, there are labels much less town_label_* items, but we provision for future expansion */
+    /* Consider all items up to 255 (in practice, there are much less town_label_* items, but we provision for future expansion */
+    sel_range.max=item_from_name("town_label") | 0xff;
 
     for (search_distance_kilometers=1; search_distance_kilometers < 512; search_distance_kilometers<<=1) {
         dbg(lvl_error, "Searching for town within %dkm", search_distance_kilometers);
@@ -123,7 +123,15 @@ static char *get_town_name_around(struct navit *navit, struct pcoord *pc) {
                                               search_distance_kilometers * 1000, &sel_range);
         if (results && results->closest) {
             if (results->closest->label) {
-                dbg(lvl_error, "Found a town within searched area");
+//                dbg(lvl_error, "Found a town within searched area");
+//                struct attr attr;
+//                if (!item_attr_get(&(results->closest->item), attr_country_id, &attr)) { /* FIXME: item points to possibly deallocated memory, we can't dereference here */
+//                	dbg(lvl_error, "No attr_country_id attribute in result");
+//                }
+//                else {
+//                	dbg(lvl_error, "Town is in country ID %ld", attr.u.num);
+//                }
+                dbg(lvl_error, "pcoord_to_country for this coord returns country id %d", pcoord_to_country(navit_get_mapset(navit), results->closest->coord));
                 closest_label = g_strdup(results->closest->label);
                 search_geo_list_destroy(results);
                 break;
