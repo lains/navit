@@ -65,10 +65,10 @@ jobs:
       - store_artifacts:
           name: Store rpm
           path: ../rpmbuild/RPMS/
-  build_android_arm:
+  build_android:
     working_directory: ~/code
     docker:
-      - image: circleci/android:api-27-alpha
+      - image: circleci/android:api-28-ndk
     environment:
       JVM_OPTS: -Xmx3200m
       GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError"'
@@ -84,10 +84,10 @@ jobs:
             sudo apt-get install -y cmake gettext libsaxonb-java librsvg2-bin pkg-config libprotobuf-c-dev protobuf-c-compiler
       - run:
           name: Install Android SDK components
-          command: sdkmanager ndk-bundle "cmake;3.6.4111459"
+          command: sdkmanager "cmake;3.6.4111459"
       - run:
-          name: Build for Android (ARM)
-          command: bash scripts/build_android_arm.sh
+          name: Build for Android
+          command: bash scripts/build_android.sh
       - run:
           name: Run Lint Test
           command: |
@@ -232,7 +232,7 @@ workflows:
       - build_linux:
           requires:
             - sanity_check
-      - build_android_arm:
+      - build_android:
           requires:
             - sanity_check
       - build_sailfish:
@@ -253,7 +253,7 @@ workflows:
       - run_doxygen:
           requires:
             - build_linux
-            - build_android_arm
+            - build_android
             - build_win32
             - build_wince
             - build_tomtom_minimal
@@ -264,7 +264,7 @@ workflows:
       - merge_trunk_in_master:
           requires:
             - build_linux
-            - build_android_arm
+            - build_android
             - build_win32
             - build_wince
             - build_tomtom_minimal
