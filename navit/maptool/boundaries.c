@@ -153,7 +153,14 @@ static GList *process_boundaries_setup(FILE *boundaries, struct relations *relat
     return boundaries_list;
 }
 
-GList *boundary_find_matches(GList *l, struct coord *c) {
+/**
+ * @brief Check in which of the provided element is located c (a specific geographical point)
+ *
+ * @param[in] c The point to search
+ * @param[in] l The list of boundaries to perform the search into (will will also search recursively in each boundary element children, if any)
+ * @return A GList of matching boundaries selectively extracted from l
+**/
+GList *boundary_find_matches(const GList *l, const struct coord *c) {
     GList *ret=NULL;
     while (l) {
         struct boundary *boundary=l->data;

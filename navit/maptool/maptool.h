@@ -158,7 +158,7 @@ osmid boundary_relid(struct boundary *b);
 
 GList *process_boundaries(FILE *boundaries, FILE *ways);
 
-GList *boundary_find_matches(GList *bl, struct coord *c);
+GList *boundary_find_matches(const GList *bl, const struct coord *c);
 
 void free_boundaries(GList *l);
 
