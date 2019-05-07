@@ -2165,7 +2165,9 @@ void osm_process_towns(FILE *in, FILE *boundaries, FILE *ways, char *suffix) {
             itembin_warning(ib, 0, "Lost town %s %s\n", item_bin_get_attr(ib, attr_town_name, NULL), item_bin_get_attr(ib,
                             attr_district_name, NULL));
         }
+        fprintf(stderr, "=====>Debug: Current Town %s is in countries:\n", (char *)(item_bin_get_attr(ib, attr_town_name, NULL)));
 
+        /* Here, we know the country, as (struct town_country*)(tc_list->data)->country->countryid and we may have more in the list*/
         if(tc_list && g_list_next(tc_list))
             ib_copy=item_bin_dup(ib);
 
@@ -2177,6 +2179,7 @@ void osm_process_towns(FILE *in, FILE *boundaries, FILE *ways, char *suffix) {
             char *town_name=NULL;
             int i;
 
+            fprintf(stderr, "=====>Debug: Country ID: %d, name: %s\n", tc->country->countryid, country_from_countryid(tc->country->countryid)->names);
             if (!tc->country->file) {
                 char *name=g_strdup_printf("country_%d.unsorted.tmp", tc->country->countryid);
                 tc->country->file=fopen(name,"wb");
