@@ -179,7 +179,13 @@ int map_collect_data_osm(FILE *in, struct maptool_osm *osm) {
         exit(EXIT_FAILURE);
     }
     while (fgets(buffer, size, in)) {
-        p=strchr(buffer,'<');
+        /* Remove leading whitespaces */
+        for (p=buffer; *p!='\0' && (*p=='\n' || *p=='\r' || *p=='\t' || *p==' '); p++);
+        if (*p=='\0') {
+            fprintf(stderr,"WARNING: blank input line\n");
+            continue;
+        }
+        p=strchr(p,'<');
         if (! p) {
             fprintf(stderr,"FATAL: wrong line in input data (does not start with '<'): %s\n", buffer);
             fprintf(stderr,"This does not look like a valid OSM file.\n"
