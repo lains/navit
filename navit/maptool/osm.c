@@ -2167,6 +2167,8 @@ void osm_process_towns(FILE *in, FILE *boundaries, FILE *ways, char *suffix) {
         }
         fprintf(stderr, "=====>Debug: Current Town %s is in countries:\n", (char *)(item_bin_get_attr(ib, attr_town_name, NULL)));
 
+        struct country_table *country_for_town = NULL;
+
         /* Here, we know the country, as (struct town_country*)(tc_list->data)->country->countryid and we may have more in the list*/
         if(tc_list && g_list_next(tc_list))
             ib_copy=item_bin_dup(ib);
@@ -2179,7 +2181,13 @@ void osm_process_towns(FILE *in, FILE *boundaries, FILE *ways, char *suffix) {
             char *town_name=NULL;
             int i;
 
-            fprintf(stderr, "=====>Debug: Country ID: %d, name: %s\n", tc->country->countryid, country_from_countryid(tc->country->countryid)->names);
+            if (country_for_town) {
+            	fprintf(stderr, "Warning more than one country for town %s\n", (char *)(item_bin_get_attr(ib, attr_town_name, NULL)));
+            }
+            else {
+            	country_for_town = country_from_countryid(tc->country->countryid);
+            }
+            fprintf(stderr, "=====>Debug: Country ID: %d, name: %s\n", country_for_town->countryid, country_from_countryid(country_for_town->countryid)->names);
             if (!tc->country->file) {
                 char *name=g_strdup_printf("country_%d.unsorted.tmp", tc->country->countryid);
                 tc->country->file=fopen(name,"wb");
